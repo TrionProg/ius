@@ -22,9 +22,7 @@ u8 v;
 u8 read_dip(){
 	u8 dip;
 	
-	//ET2=0;
 	dip=read_max(EXT_LO);
-	//ET2=1;
 	
 	return dip;
 }
@@ -35,45 +33,43 @@ void reset() {
 }
 
 void initialize_handler() {
-	mode = MODE_POLL;
+	mode = MODE_TEST;
 	reset();
 }
 
-void poll_loop() {
-	u8 i;
+void test_loop() {
 	u8 byte_in;
 	
-	while( read_dip()==DIP_POLL_MODE ){
-		//leds(read_dip());
-		
+	while( read_dip()!=DIP_POLL_MODE ){
 		if( keyboard_read_byte(&byte_in) ){
-			for( i=byte_in;i<='9';i++ ){
-				send_byte(i);
-			}
+			send_byte(byte_in);
 			send_string("\r\n");
 		}
-		
-		delay_ms(100);
+		delay_ms(1);
 	}
 	
 	mode=MODE_INT;
 }
 
 void int_loop() {
+	u8 byte_in;
+	
 	while( read_dip()!=DIP_POLL_MODE ){
-		//leds(v);
-		//v=~v;
-		delay_ms(100);
+		if( keyboard_read_byte(&byte_in) ){
+			handler_int(byte_in);
+			send_string("\r\n");
+		}
+		delay_ms(1);
 	}
 	
-	mode=MODE_POLL;
+	mode=MODE_TEST;
 }
 
 void handler_loop() {
 	while(1) {
-		if( mode==MODE_POLL ) {
-			send_string("\r\npoll mode\r\n");
-			poll_loop();
+		if( mode==MODE_TEST ) {
+			send_string("\r\ntest mode\r\n");
+			test_loop();
 		}else{
 			send_string("\r\ninteruption mode\r\n");
 			int_loop();
@@ -95,14 +91,8 @@ u8 to_hex(u8 val) {
 	return '0'+val;
 }
 
-void handler_int() {
+void handler_int(u8 sym) {
 	u8 num;
-	u8 sym;
-	
-	if( !keyboard_read_byte(&sym) ){
-		error();
-		return;
-	}
 	
 	if( state==STATE_ERROR ){//очищаем после ошибки
 		reset();

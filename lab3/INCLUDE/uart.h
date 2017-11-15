@@ -14,4 +14,9 @@ void send_byte(u8 data);
 bool read_byte(u8* data);
 void send_string(char * str);
 
+u8 poll_is_byte();
+u8 poll_read_byte();
+void poll_write_byte(u8 byte_out);
+void poll_send_string(char * str);
+
 #endif

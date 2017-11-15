@@ -35,21 +35,28 @@ void poll_loop() {
 	u8 byte_in;
 	
 	while( read_dip()==DIP_POLL_MODE ){
-		if( read_byte(&byte_in) ){
-			for( i=byte_in;i<='9';i++ ){
-				send_byte(i);
-			}
-			send_string("\r\n");
-		}
+		if( poll_is_byte() ){// Прием байта
+			byte_in=poll_read_byte();
 		
-		delay_ms(1);
+			for( i=byte_in;i<='9';i++ ){
+				poll_write_byte(i);
+			}
+			
+			poll_write_byte('\r');
+			poll_write_byte('\n');
+		}
 	}
 	
 	mode=MODE_INT;
 }
 
 void int_loop() {
+	u8 byte_in;
+	
 	while( read_dip()!=DIP_POLL_MODE ){
+		if( read_byte(&byte_in) ){
+			handler_int(byte_in);
+		}
 		delay_ms(1);
 	}
 	
@@ -59,9 +66,11 @@ void int_loop() {
 void handler_loop() {
 	while(1) {
 		if( mode==MODE_POLL ) {
-			send_string("\r\npoll mode\r\n");
+			ES=0;
+			poll_send_string("\r\npoll mode\r\n");
 			poll_loop();
 		}else{
+			ES=1;
 			send_string("\r\ninteruption mode\r\n");
 			int_loop();
 		}
@@ -82,14 +91,8 @@ u8 to_hex(u8 val) {
 	return '0'+val;
 }
 
-void handler_int() {
+void handler_int(u8 sym) {
 	u8 num;
-	u8 sym;
-	
-	if( !read_byte(&sym) ){
-		error();
-		return;
-	}
 	
 	if( state==STATE_ERROR ){//очищаем после ошибки
 		reset();

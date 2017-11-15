@@ -49,11 +49,13 @@ e-mail: kluchev@d1.ifmo.ru
 -----------------------------------------------------------------------------*/
 void write_max( unsigned char xdata *regnum, unsigned char val )
 {
-unsigned char oldDPP = DPP;
+	unsigned char oldDPP = DPP;
+	EA=0;
 
     DPP     = MAXBASE;
     *regnum = val;
     DPP     = oldDPP;
+	EA=1;
 }
 
 /**----------------------------------------------------------------------------
@@ -72,12 +74,14 @@ unsigned char oldDPP = DPP;
 unsigned char read_max( unsigned char xdata *regnum )
 {
 unsigned char oldDPP=DPP;
-unsigned char val;
+	unsigned char val;
+
+	EA=0;
 
     DPP = MAXBASE;
     val = *regnum;
     DPP = oldDPP;
-
+	EA=1;
     return val;
 }
 

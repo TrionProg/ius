@@ -20,7 +20,7 @@ void initialize_uart(u8 speed) {
     TCON     |=  0x40; //Запуск таймера 1
     SCON      =  0x50; //Настройки последовательного канала
 	
-	ES=1;
+	ES=0;
 }
 
 void send_byte(u8 dat) {
@@ -91,10 +91,26 @@ void UART_ISR( void ) __interrupt ( 4 ) {
 		if( !is_buffer_full(&buffer_in) ){//Если полон, то теряем байт
 			push_byte_to_buffer(&buffer_in,dat);
 		}
-		
-		if( mode==MODE_INT ) {
-			handler_int();
-		}
 	}
+}
+
+u8 poll_is_byte()  {
+    return RI;
+}
+
+u8 poll_read_byte() {
+    while( !RI );
+    RI = 0;
+    return SBUF;
+}
+
+void poll_write_byte(u8 byte_out){
+	SBUF = byte_out;
+    TI   = 0;
+    while( !TI );
+}
+
+void poll_send_string(char * str){
+    while( *str ) poll_write_byte( *str++ );
 }
 	

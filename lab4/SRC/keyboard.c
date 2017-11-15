@@ -65,10 +65,6 @@ void key_click(u8 key){
 	
 	if( !is_buffer_full(&key_clicks) ){
 		push_byte_to_buffer(&key_clicks, key_value[key]);
-		
-		if( mode==MODE_INT ) {
-			handler_int();
-		}
 	}
 }
 
